@@ -68,16 +68,11 @@ function Apolices() {
     const dadosBeneficiarios = apolice.beneficiario
       ?.map((beneficiario) =>
         [
-          beneficiario.nome,
           beneficiario.cpf,
-          beneficiario.parentesco,
-          beneficiario.percentual?.toString(),
         ].join(" ")
       )
       .join(" ")
     const dadosBusca = [
-      apolice.id_apolice.toString(),
-      apolice.cliente?.nome,
       apolice.cliente?.cpf,
       dadosBeneficiarios,
     ]
@@ -160,7 +155,7 @@ function Apolices() {
       <section className="mb-7 grid grid-cols-1 gap-4 md:grid-cols-3">
         <input
           type="text"
-          placeholder="Buscar nº, cliente ou beneficiário..."
+          placeholder="Buscar por CPF do cliente ou CPF do beneficiário..."
           value={busca}
           onChange={(evento) => setBusca(evento.target.value)}
           className="rounded-xl border border-slate-200 bg-white px-5 py-4 outline-none"

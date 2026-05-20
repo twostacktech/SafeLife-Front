@@ -1,241 +1,278 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Plus, Trash } from "@phosphor-icons/react";
-import { cadastrar } from "../../services/Service";
+import { cadastrar, atualizar } from "../../services/Service";
+import type { Cliente } from "../clientes/Clientes";
 
 interface Beneficiario {
-  nome: string;
-  parentesco: string;
-  percentual: string;
+    nome: string;
+    parentesco: string;
+    percentual: string;
 }
 
 interface FormClientesProps {
-  isOpen: boolean;
-  onClose: () => void;
-  atualizarListagem: () => void;
+    isOpen: boolean;
+    onClose: () => void;
+    atualizarListagem: () => void;
+    clienteEditando: Cliente | null;
 }
 
-function FormClientes({ isOpen, onClose, atualizarListagem }: FormClientesProps) {
-  const [beneficiarios, setBeneficiarios] = useState<Beneficiario[]>([
-    { nome: "", parentesco: "", percentual: "100" },
-  ]);
+function FormClientes({
+    isOpen,
+    onClose,
+    atualizarListagem,
+    clienteEditando
+}: FormClientesProps) {
 
-  if (!isOpen) return null;
-
-  const adicionarBeneficiario = () => {
-    setBeneficiarios([
-      ...beneficiarios,
-      { nome: "", parentesco: "", percentual: "" },
+    const [beneficiarios, setBeneficiarios] = useState<Beneficiario[]>([
+        { nome: "", parentesco: "", percentual: "100" },
     ]);
-  };
 
-  const removerBeneficiario = (index: number) => {
-    setBeneficiarios(beneficiarios.filter((_, i) => i !== index));
-  };
+    const [formData, setFormData] = useState({
+        nome: "",
+        email: "",
+        cpf: "",
+        data_nascimento: "",
+        telefone: "",
+        senha: ""
+    });
 
-  const atualizarBeneficiario = (
-    index: number,
-    campo: keyof Beneficiario,
-    valor: string
-  ) => {
-    const novosBeneficiarios = [...beneficiarios];
-    novosBeneficiarios[index][campo] = valor;
-    setBeneficiarios(novosBeneficiarios);
-  };
+    // ✅ RESET + PREENCHIMENTO AO EDITAR
+    useEffect(() => {
+        if (clienteEditando) {
+            setFormData({
+                nome: clienteEditando.nome || "",
+                email: clienteEditando.email || "",
+                cpf: clienteEditando.cpf || "",
+                data_nascimento: "",
+                telefone: "",
+                senha: ""
+            });
 
-  async function salvarCliente(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+            const beneficiariosExistentes =
+                clienteEditando.apolice?.[0]?.beneficiario?.map((b) => ({
+                    nome: b.nome,
+                    parentesco: b.parentesco,
+                    percentual: String(b.percentual ?? 0)
+                })) || [
+                    { nome: "", parentesco: "", percentual: "100" }
+                ];
 
-    // Monta o objeto exatamente o backend espera
-    const dadosParaEnviar = {
-      nome: (document.getElementsByName("nome-titular")[0] as HTMLInputElement)?.value,
-      email: (document.getElementsByName("email-titular")[0] as HTMLInputElement)?.value,
-      cpf: (document.getElementsByName("cpf-titular")[0] as HTMLInputElement)?.value,
-      beneficiarios: beneficiarios.map(b => ({
-        nome: b.nome,
-        parentesco: b.parentesco,
-        percentual: Number(b.percentual) // Garante que vai como número para o banco
-      }))
+            setBeneficiarios(beneficiariosExistentes);
+
+        } else {
+            setFormData({
+                nome: "",
+                email: "",
+                cpf: "",
+                data_nascimento: "",
+                telefone: "",
+                senha: ""
+            });
+
+            setBeneficiarios([
+                { nome: "", parentesco: "", percentual: "100" },
+            ]);
+        }
+    }, [clienteEditando, isOpen]);
+
+    if (!isOpen) return null;
+
+    const atualizarCampo = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
     };
 
-    try {
-      // Envia para a rota de cadastro da API
-      await cadastrar("/clientes", dadosParaEnviar, () => {});
-      alert("Cliente cadastrado com sucesso!");
-      atualizarListagem(); // Faz a lista atualizar no fundo da tela
-      onClose(); // Fecha o modal
-    } catch (error) {
-      alert("Erro ao cadastrar o cliente na API.");
+    const adicionarBeneficiario = () => {
+        setBeneficiarios([
+            ...beneficiarios,
+            { nome: "", parentesco: "", percentual: "" },
+        ]);
+    };
+
+    const removerBeneficiario = (index: number) => {
+        setBeneficiarios(beneficiarios.filter((_, i) => i !== index));
+    };
+
+    async function salvarCliente(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+
+        const dadosParaEnviar = {
+            ...formData,
+            apolice: [
+                {
+                    id_apolice: 0,
+                    data_inicio: new Date().toISOString().split("T")[0],
+                    mensalidade: 0,
+                    valor_segurado: 0,
+                    status: "Ativa",
+                    cobertura: "Padrão",
+                    beneficiario: beneficiarios.map((b) => ({
+                        id_beneficiario: 0,
+                        nome: b.nome,
+                        parentesco: b.parentesco,
+                        percentual: Number(b.percentual),
+                    })),
+                },
+            ],
+        };
+
+        try {
+            if (clienteEditando) {
+                await atualizar(
+                    `/clientes/${clienteEditando.cpf}`,
+                    dadosParaEnviar,
+                    () => {}
+                );
+                alert("Cliente atualizado com sucesso!");
+            } else {
+                await cadastrar(
+                    "/clientes/cadastrar",
+                    dadosParaEnviar,
+                    () => {}
+                );
+                alert("Cliente cadastrado com sucesso!");
+            }
+
+            atualizarListagem();
+            onClose();
+
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao salvar cliente");
+        }
     }
-  }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6 animate-fade-in">
-      {/* CARD DO MODAL COM ALTURA MÁXIMA CONTROLADA (RESPIRO VISUAL) */}
-      <div className="w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl bg-white p-6 shadow-2xl transition-all">
-        
-        {/* HEADER (FIXO NO TOPO) */}
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100 flex-shrink-0">
-          <h2 className="text-xl font-bold text-slate-950">Novo cliente</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
-          >
-            <X size={20} weight="bold" />
-          </button>
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+            <div className="w-full max-w-lg bg-white p-6 rounded-2xl">
+
+                {/* HEADER */}
+                <div className="flex justify-between border-b pb-3">
+                    <h2 className="font-bold text-lg">
+                        {clienteEditando ? "Editar cliente" : "Novo cliente"}
+                    </h2>
+
+                    <button onClick={onClose}>
+                        <X />
+                    </button>
+                </div>
+
+                {/* FORM */}
+                <form onSubmit={salvarCliente} className="mt-4 space-y-3">
+
+                    <input
+                        name="nome"
+                        value={formData.nome}
+                        onChange={atualizarCampo}
+                        placeholder="Nome"
+                    />
+
+                    <input
+                        name="email"
+                        value={formData.email}
+                        onChange={atualizarCampo}
+                        placeholder="Email"
+                    />
+
+                    <input
+                        name="cpf"
+                        value={formData.cpf}
+                        onChange={atualizarCampo}
+                        placeholder="CPF"
+                    />
+
+                    <input
+                        type="date"
+                        name="data_nascimento"
+                        value={formData.data_nascimento}
+                        onChange={atualizarCampo}
+                    />
+
+                    <input
+                        name="telefone"
+                        value={formData.telefone}
+                        onChange={atualizarCampo}
+                        placeholder="Telefone"
+                    />
+
+                    <input
+                        name="senha"
+                        value={formData.senha}
+                        onChange={atualizarCampo}
+                        placeholder="Senha"
+                    />
+
+                    {/* BENEFICIÁRIOS */}
+                    <div className="flex justify-between mt-4">
+                        <h3>Beneficiários</h3>
+
+                        <button type="button" onClick={adicionarBeneficiario}>
+                            <Plus />
+                        </button>
+                    </div>
+
+                    {beneficiarios.map((b, index) => (
+                        <div key={index} className="bg-gray-100 p-3 rounded mt-2">
+
+                            <input
+                                value={b.nome}
+                                onChange={(e) => {
+                                    const copy = [...beneficiarios];
+                                    copy[index].nome = e.target.value;
+                                    setBeneficiarios(copy);
+                                }}
+                                placeholder="Nome"
+                            />
+
+                            <input
+                                value={b.parentesco}
+                                onChange={(e) => {
+                                    const copy = [...beneficiarios];
+                                    copy[index].parentesco = e.target.value;
+                                    setBeneficiarios(copy);
+                                }}
+                                placeholder="Parentesco"
+                            />
+
+                            <input
+                                type="number"
+                                value={b.percentual}
+                                onChange={(e) => {
+                                    const copy = [...beneficiarios];
+                                    copy[index].percentual = e.target.value;
+                                    setBeneficiarios(copy);
+                                }}
+                                placeholder="%"
+                            />
+
+                            {beneficiarios.length > 1 && (
+                                <button
+                                    type="button"
+                                    onClick={() => removerBeneficiario(index)}
+                                >
+                                    <Trash />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+
+                    {/* BOTÕES */}
+                    <div className="flex justify-end gap-2 pt-4">
+                        <button type="button" onClick={onClose}>
+                            Cancelar
+                        </button>
+
+                        <button type="submit">
+                            Salvar
+                        </button>
+                    </div>
+
+                </form>
+            </div>
         </div>
-
-        {/* FORMULÁRIO COM ROLAGEM INTERNA SE O CONTEÚDO CRESCER */}
-        <form onSubmit={salvarCliente} className="mt-4 space-y-4 overflow-y-auto flex-1 pr-1 custom-scrollbar flex flex-col justify-between">
-          
-          <div className="space-y-4">
-            {/* NOME */}
-            <div>
-              <label className="text-sm font-semibold text-gray-800">Nome</label>
-              <input
-                type="text"
-                name="nome-titular"
-                required
-                className="mt-1.5 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition"
-              />
-            </div>
-
-            {/* EMAIL */}
-            <div>
-              <label className="text-sm font-semibold text-gray-800">E-mail</label>
-              <input
-                type="email"
-                name="email-titular"
-                required
-                className="mt-1.5 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition"
-              />
-            </div>
-
-            {/* CPF */}
-            <div>
-              <label className="text-sm font-semibold text-gray-800">CPF</label>
-              <input
-                type="text"
-                name="cpf-titular"
-                required
-                placeholder="000.000.000-00"
-                className="mt-1.5 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition"
-              />
-            </div>
-
-            {/* SEÇÃO BENEFICIÁRIOS */}
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                  Beneficiários
-                </label>
-                <button
-                  type="button"
-                  onClick={adicionarBeneficiario}
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-red-700 hover:text-red-800 transition"
-                >
-                  <Plus size={14} weight="bold" />
-                  Adicionar
-                </button>
-              </div>
-
-              {/* LISTA DINÂMICA DE BLOCOS */}
-              <div className="space-y-3">
-                {beneficiarios.map((b, index) => (
-                  <div 
-                    key={index} 
-                    className="relative rounded-xl bg-gray-100 p-6 border border-gray-200 space-y-3"
-                  >
-                    {/* BOTÃO REMOVER (LIXEIRA) NO TOPO DIREITO DO CARD */}
-                    {beneficiarios.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removerBeneficiario(index)}
-                        className="absolute top-3 right-3 rounded-lg p-1.5 text-red-500 hover:text-red-900 transition"
-                        title="Remover beneficiário"
-                      >
-                        <Trash size={16} />
-                      </button>
-                    )}
-
-                    {/* CAMPO NOME */}
-                    <div>
-                      <label className="text-xs font-semibold text-gray-600 block mb-1">
-                        Nome:
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Nome completo do beneficiário"
-                        value={b.nome}
-                        onChange={(e) =>
-                          atualizarBeneficiario(index, "nome", e.target.value)
-                        }
-                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition"
-                      />
-                    </div>
-
-                    {/* GRID PARA PARENTESCO E PERCENTUAL FICAREM LADO A LADO */}
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* CAMPO PARENTESCO */}
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">
-                          Parentesco:
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Ex: Filho, Cônjuge"
-                          value={b.parentesco}
-                          onChange={(e) =>
-                            atualizarBeneficiario(index, "parentesco", e.target.value)
-                          }
-                          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition"
-                        />
-                      </div>
-
-                      {/* CAMPO PERCENTUAL */}
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">
-                          Percentual (%):
-                        </label>
-                        <input
-                          type="number"
-                          required
-                          placeholder="100"
-                          value={b.percentual}
-                          onChange={(e) =>
-                            atualizarBeneficiario(index, "percentual", e.target.value)
-                          }
-                          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* BOTÕES DE AÇÃO (AGORA DENTRO DO FORM PARA DISPARAR O SUBMIT) */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 flex-shrink-0 mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition active:scale-95"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="rounded-xl bg-red-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-105 hover:bg-red-800 active:scale-95"
-            >
-              Salvar
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+    );
 }
 
 export default FormClientes;

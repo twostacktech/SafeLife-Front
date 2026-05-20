@@ -1,7 +1,6 @@
-import { useState } from "react"; // 1. IMPORTAR O USESTATE
-import { Plus, Users, Trash } from "@phosphor-icons/react";
-import FormClientes from "../formclientes/FormClientes"; // 2. IMPORTAR O SEU MODAL
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import { Plus, Trash, PencilSimple } from "@phosphor-icons/react";
+import FormClientes from "../formclientes/FormClientes";
 import { buscar, deletar } from "../../services/Service";
 
 export interface Beneficiario {
@@ -11,141 +10,126 @@ export interface Beneficiario {
     percentual: number;
 }
 
+export interface Apolice {
+    beneficiario: Beneficiario[];
+}
+
 export interface Cliente {
-    id?: number;
+    cpf: string;
     nome: string;
     email: string;
-    cpf: string;
-    beneficiarios: Beneficiario[];
+    apolice?: Apolice[];
 }
 
 function Clientes() {
-    // 3. ESTADO PARA CONTROLAR A ABERTURA DO MODAL
     const [isModalOpen, setIsModalOpen] = useState(false);
-
     const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
 
     async function listarClientes() {
         try {
-            // Conferir se endpoint '/clientes' é o mesmo do controlador do Backend
             await buscar("/clientes", setClientes);
         } catch (error) {
             console.error("Erro ao listar os clientes:", error);
         }
     }
 
-    async function excluirCliente(id: number) {
+    async function excluirCliente(cpf: string) {
         if (window.confirm("Deseja realmente excluir este cliente?")) {
             try {
-                await deletar(`/clientes/${id}`);
-                listarClientes(); // Atualiza a tela após deletar
+                await deletar(`/clientes/${cpf}`);
+                listarClientes();
             } catch (error) {
                 alert("Erro ao excluir o cliente.");
             }
         }
     }
 
+    function abrirCadastro() {
+        setClienteEditando(null);
+        setIsModalOpen(true);
+    }
+
+    function abrirEdicao(cliente: Cliente) {
+        setIsModalOpen(true);
+        setClienteEditando(cliente);
+    }
+
+    function fecharModal() {
+        setIsModalOpen(false);
+        setTimeout(() => setClienteEditando(null), 150);
+    }
+
     useEffect(() => {
         listarClientes();
     }, []);
 
-
     return (
-        <div className="mx-auto max-w-7xl px-6 py-10 antialiased text-gray-800">
+        <div className="mx-auto max-w-7xl px-6 py-10 text-gray-800">
+
             {/* HEADER */}
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Clientes</h1>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <h1 className="text-3xl font-bold">Clientes</h1>
+                    <p className="text-sm text-gray-500">
                         Gerencie segurados e seus beneficiários.
                     </p>
                 </div>
 
-                {/* 4. ADICIONADO O ONCLICK PARA ABRIR O MODAL */}
                 <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-red-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-105 hover:bg-red-800 active:scale-95"
+                    onClick={abrirCadastro}
+                    className="flex items-center gap-2 rounded-xl bg-red-700 px-5 py-2.5 text-white"
                 >
-                    Novo cliente
-                    <Plus size={16} weight="bold" />
+                    Novo cliente <Plus size={16} />
                 </button>
             </div>
-
-            {/* SEARCH */}
-            <input
-                type="search"
-                placeholder="Filtrar por nome, e-mail, CPF ou beneficiário..."
-                className="mt-6 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm text-gray-700 placeholder-gray-400 shadow-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition"
-            />
 
             {/* LISTA */}
             <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {clientes.map((c) => (
                     <article
-                        key={c.id}
-                        className="rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]"
+                        key={c.cpf}
+                        className="rounded-2xl border bg-white p-5"
                     >
-                        {/* HEADER CARD */}
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-500">
-                                    <Users size={20} />
-                                </div>
-
-                                <div>
-                                    <h3 className="text-base font-bold text-gray-900">
-                                        {c.nome}
-                                    </h3>
-                                    <p className="text-xs text-gray-500">
-                                        {c.email} · {c.cpf}
-                                    </p>
-                                </div>
+                        <div className="flex justify-between">
+                            <div>
+                                <h3 className="font-bold">{c.nome}</h3>
+                                <p className="text-sm text-gray-500">
+                                    {c.email} · {c.cpf}
+                                </p>
                             </div>
 
-                            <button
-                                onClick={() => c.id && excluirCliente(c.id)}
-                                className="rounded-md p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition"
-                            >
-                                <Trash size={18} />
-                            </button>
-                        </div>
+                            <div className="flex gap-2">
+                                {/* EDITAR */}
+                                <button
+                                    onClick={() => abrirEdicao(c)}
+                                    className="p-2 text-blue-500 hover:bg-blue-50 rounded"
+                                >
+                                    <PencilSimple size={18} />
+                                </button>
 
-                        {/* BENEFICIÁRIOS */}
-                        <div className="mt-5">
-                            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                Beneficiários
-                            </h4>
-
-                            <ul className="mt-2 space-y-1.5">
-                                {c.beneficiarios.map((b, i) => (
-                                    <li
-                                        key={i}
-                                        className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-2.5 text-sm"
-                                    >
-                                        <span className="font-semibold text-gray-800">
-                                            {b.nome}
-                                        </span>
-
-                                        <span className="text-xs text-gray-500">
-                                            {b.parentesco} · {b.percentual}%
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
+                                {/* DELETAR */}
+                                <button
+                                    onClick={() => excluirCliente(c.cpf)}
+                                    className="p-2 text-red-500 hover:bg-red-50 rounded"
+                                >
+                                    <Trash size={18} />
+                                </button>
+                            </div>
                         </div>
                     </article>
                 ))}
             </div>
 
-            {/* 5. RENDERIZAR O MODAL PASSANDO O CONTROLE DE ESTADO CORRIGIDO */}
+            {/* MODAL */}
             <FormClientes
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={fecharModal}
                 atualizarListagem={listarClientes}
+                clienteEditando={clienteEditando}
             />
         </div>
     );
 }
 
 export default Clientes;
-

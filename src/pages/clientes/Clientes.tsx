@@ -65,7 +65,8 @@ function Clientes() {
     }, []);
 
     return (
-        <div className="mx-auto max-w-7xl px-6 py-10 text-gray-800 min-h-[65vh] flex flex-col justify-between">
+        <div className="mx-auto max-w-7xl px-6 py-10 text-gray-800 min-h-[70vh] flex flex-col">
+            <div className="flex-grow">
 
             {/* HEADER */}
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -120,7 +121,7 @@ function Clientes() {
                     </article>
                 ))}
             </div>
-
+</div>
             {/* MODAL */}
             <FormClientes
                 isOpen={isModalOpen}

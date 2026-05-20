@@ -7,9 +7,15 @@ export default function CTA() {
           Faça uma simulação rápida e descubra o plano ideal para você e sua
           família.
         </p>
-        <button className="btn-white" type="button">
+        <a
+          href="https://api.whatsapp.com/send?phone=5511957943523&text=Olá%20SafeLife%2C%20gostaria%20de%20saber%20mais%20sobre%20os%20seguros%20de%20vida."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-white" 
+          style={{ display: 'center', textDecoration: 'none' }}
+        >
           Quero contratar agora <span>→</span>
-        </button>
+        </a>
       </div>
     </section>
   )

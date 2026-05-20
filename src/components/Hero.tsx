@@ -26,6 +26,11 @@ const heroImages = [
 export default function Hero() {
   const [activeImage, setActiveImage] = useState(0)
 
+  const scrollToFAQ = () => {
+    const el = document.getElementById("faq")
+    if (el) el.scrollIntoView({ behavior: "smooth" })
+  }
+
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setActiveImage((currentImage) => (currentImage + 1) % heroImages.length)
@@ -46,10 +51,19 @@ export default function Hero() {
           </p>
 
           <div className="hero-buttons">
-            <button className="btn-primary" type="button">
-              Faça uma cotação <span>→</span>
-            </button>
-            <button className="btn-secondary" type="button">
+            <a 
+              href="https://api.whatsapp.com/send?phone=5511957943523&text=Olá%20SafeLife%2C%20gostaria%20de%20saber%20mais%20sobre%20os%20seguros%20de%20vida."
+              target="_blank"
+              rel="noopener noreferrer" 
+              className="btn-primary"
+            >
+              Fale conosco
+            </a>
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={scrollToFAQ}
+            >
               Saiba mais
             </button>
           </div>

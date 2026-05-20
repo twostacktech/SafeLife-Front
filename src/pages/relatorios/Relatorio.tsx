@@ -149,7 +149,7 @@ function Relatorios() {
                         <div>
                             <div className="flex justify-between mb-2">
                                 <span className="font-medium text-slate-700">
-                                    RH
+                                    Vida em Grupo
                                 </span>
 
                                 <span className="font-bold text-slate-900">
@@ -166,7 +166,7 @@ function Relatorios() {
                         <div>
                             <div className="flex justify-between mb-2">
                                 <span className="font-medium text-slate-700">
-                                    Financeiro
+                                    Acidentes Pessoais
                                 </span>
 
                                 <span className="font-bold text-slate-900">
@@ -183,7 +183,7 @@ function Relatorios() {
                         <div>
                             <div className="flex justify-between mb-2">
                                 <span className="font-medium text-slate-700">
-                                    Marketing
+                                    Doenças Graves
                                 </span>
 
                                 <span className="font-bold text-slate-900">

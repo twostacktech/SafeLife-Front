@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
+import { toast } from "react-toastify"
 import { buscar, deletar } from "../../services/Service"
 import type Apolice from "../../models/Apolice"
 import FormApolice from "../formApolice/FormApolice"
@@ -108,7 +109,7 @@ function Apolices() {
       )
     } catch (error) {
       console.error(error)
-      alert("Erro ao excluir apólice.")
+      toast.error("Erro ao excluir apólice.")
     }
   }
 

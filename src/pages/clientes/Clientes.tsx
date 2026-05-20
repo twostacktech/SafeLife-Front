@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash, PencilSimple } from "@phosphor-icons/react";
+import { Plus, Trash, PencilSimple, MagnifyingGlass } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import FormClientes from "../formclientes/FormClientes";
 import { buscar, deletar } from "../../services/Service";
@@ -95,7 +95,7 @@ function Clientes() {
 
     return (
         <div className="mx-auto max-w-7xl px-6 py-10 text-gray-800 min-h-[70vh] flex flex-col">
-            <div className="flex-grow">
+            <div className="grow">
 
                 {/* HEADER */}
                 <div className="flex flex-wrap items-end justify-between gap-4">

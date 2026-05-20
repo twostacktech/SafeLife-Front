@@ -1,7 +1,8 @@
 import axios from "axios"
 import { useState } from "react"
+import { Plus, Trash2 } from "lucide-react"
 import { toast } from "react-toastify"
-import { api, cadastrar } from "../../services/Service"
+import { api, atualizar, cadastrar, deletar } from "../../services/Service"
 import type Apolice from "../../models/Apolice"
 import type Beneficiario from "../../models/Beneficiarios"
 import type Cliente from "../../models/Cliente"
@@ -129,7 +130,7 @@ function FormApolice({
     )
 
     if (Math.abs(percentualTotal - 100) > 0.01) {
-      alert("A soma dos percentuais dos beneficiários precisa ser 100%.")
+      toast.error("A soma dos percentuais dos beneficiários precisa ser 100%.")
       return
     }
 
@@ -184,7 +185,7 @@ function FormApolice({
         }
       } catch (error) {
         await atualizarListagem()
-        alert(
+        toast.error(
           `A apólice foi salva, mas houve erro ao salvar beneficiários.\n${obterMensagemErro(
             error
           )}`

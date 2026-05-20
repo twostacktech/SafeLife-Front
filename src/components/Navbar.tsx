@@ -29,7 +29,7 @@ export default function Navbar() {
     return (
       <header className="admin-header">
         <nav className="admin-navbar container">
-          <Link className="admin-logo" to="/clientes">
+          <Link className="admin-logo" to="/">
             <span className="admin-logo-icon">
               <Shield size={22} />
             </span>

@@ -82,7 +82,7 @@ function FormClientes({
 
         // VALIDAÇÃO DE IDADE
         if (!maiorDe18Anos(formData.data_nascimento)) {
-            alert("O cliente deve ter no mínimo 18 anos para contratar o seguro.");
+            toast.error("O cliente deve ter no mínimo 18 anos para contratar o seguro.");
             return;
         }
 

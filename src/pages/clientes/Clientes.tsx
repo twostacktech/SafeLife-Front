@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash, PencilSimple } from "@phosphor-icons/react";
+import { Plus, Trash, PencilSimple, MagnifyingGlass } from "@phosphor-icons/react";
 import FormClientes from "../formclientes/FormClientes";
 import { buscar, deletar } from "../../services/Service";
 
@@ -17,12 +17,48 @@ function Clientes() {
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
 
+    const [cpfBusca, setCpfBusca] = useState("");
+    const [erroBusca, setErroBusca] = useState("");
+
     async function listarClientes() {
         try {
             await buscar("/clientes", setClientes);
         } catch (error) {
             console.error("Erro ao listar os clientes:", error);
         }
+    }
+
+    async function lidarComBusca(e: React.FormEvent) {
+        e.preventDefault();
+
+        if (!cpfBusca.trim()) {
+            listarClientes();
+            return;
+        }
+
+        try {
+            setErroBusca("");
+            // Faz a chamada na rota do back-end (ex: /clientes/12345678900)
+            await buscar(`/clientes/${cpfBusca.trim()}`, (data: Cliente) => {
+                if (data && data.cpf) {
+                    setClientes([data]); // Envelopa em array pro .map da lista não quebrar
+                } else {
+                    setClientes([]);
+                    setErroBusca("Nenhum cliente encontrado com este CPF.");
+                }
+            });
+        } catch (error) {
+            console.error("Erro ao buscar cliente por CPF:", error);
+            setClientes([]);
+            setErroBusca("Cliente não encontrado ou erro na busca.");
+        }
+    }
+
+    // Função para resetar a busca e mostrar todos os clientes de novo
+    function limparBusca() {
+        setCpfBusca("");
+        setErroBusca("");
+        listarClientes();
     }
 
     async function excluirCliente(cpf: string) {
@@ -75,6 +111,45 @@ function Clientes() {
                         Novo cliente <Plus size={16} />
                     </button>
                 </div>
+
+                {/* BUSCAR */}
+                <form onSubmit={lidarComBusca} className="mt-8 max-w-3xl">
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                        Buscar Segurado por CPF
+                    </label>
+                    <div className="flex gap-2">
+                        <div className="relative flex-1">
+                            <input
+                                type="text"
+                                className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition"
+                                placeholder="Digite o CPF (somente números)"
+                                value={cpfBusca}
+                                onChange={(e) => setCpfBusca(e.target.value)}
+                            />
+                            <MagnifyingGlass size={18} className="absolute right-3 top-2.5 text-gray-400" />
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm font-medium transition shadow-sm"
+                        >
+                            Buscar
+                        </button>
+
+                        {cpfBusca && (
+                            <button
+                                type="button"
+                                onClick={limparBusca}
+                                className="px-3 py-2 text-sm font-medium bg-gray-400 text-gray-800  hover:text-blue-900 hover:bg-gray-300 rounded-xl transition"
+                            >
+                                Voltar 
+                            </button>
+                        )}
+                    </div>
+                    {erroBusca && (
+                        <p className="text-xs text-red-600 mt-2 font-medium">{erroBusca}</p>
+                    )}
+                </form>
 
                 {/* LISTA */}
                 <div className="mt-6 grid gap-4 md:grid-cols-2">

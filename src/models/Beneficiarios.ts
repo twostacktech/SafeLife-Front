@@ -5,6 +5,6 @@ export default interface Beneficiario {
     nome: string;
     cpf: string;
     parentesco: string;
-    percentual: number;
+    percentual: number | string;
     apolice: Apolice;
 }

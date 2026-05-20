@@ -1,8 +1,77 @@
+import { useState } from "react"
+import { api, cadastrar } from "../../services/Service"
+import type Apolice from "../../models/Apolice"
+import type Cliente from "../../models/Cliente"
+
 type FormApoliceProps = {
   fecharModal: () => void
+  atualizarListagem: () => Promise<void> | void
+  adicionarApolice: (apolice: Apolice) => void
 }
 
-function FormApolice({ fecharModal }: FormApoliceProps) {
+function FormApolice({
+  fecharModal,
+  atualizarListagem,
+  adicionarApolice,
+}: FormApoliceProps) {
+  const [formData, setFormData] = useState({
+    cpf: "",
+    cobertura: "Vida Individual",
+    valor_segurado: "",
+    mensalidade: "",
+    status: "Ativa",
+    data_inicio: "",
+  })
+
+  const atualizarCampo = (
+    evento: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setFormData({
+      ...formData,
+      [evento.target.name]: evento.target.value,
+    })
+  }
+
+  async function cadastrarApolice(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault()
+
+    const dadosParaEnviar = {
+      data_inicio: formData.data_inicio,
+      mensalidade: Number(formData.mensalidade),
+      valor_segurado: Number(formData.valor_segurado),
+      status: formData.status,
+      cobertura: formData.cobertura,
+      cliente: {
+        cpf: formData.cpf,
+      },
+    }
+
+    try {
+      const apoliceCadastrada = await cadastrar(
+        "/apolices",
+        dadosParaEnviar,
+        () => {}
+      )
+      const respostaCliente = await api.get<Cliente>(`/clientes/${formData.cpf}`)
+      const apoliceCompleta = {
+        ...dadosParaEnviar,
+        ...apoliceCadastrada,
+        valor_segurado: Number(formData.valor_segurado),
+        mensalidade: Number(formData.mensalidade),
+        data_inicio: formData.data_inicio,
+        cliente: respostaCliente.data,
+      } as Apolice
+
+      alert("Apólice cadastrada com sucesso!")
+      await atualizarListagem()
+      adicionarApolice(apoliceCompleta)
+      fecharModal()
+    } catch (error) {
+      console.error(error)
+      alert("Erro ao cadastrar apólice. Verifique os dados e tente novamente.")
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-lg rounded-2xl bg-white p-7 shadow-2xl">
@@ -12,6 +81,7 @@ function FormApolice({ fecharModal }: FormApoliceProps) {
           </h2>
 
           <button
+            type="button"
             onClick={fecharModal}
             className="text-2xl text-slate-700"
           >
@@ -19,7 +89,7 @@ function FormApolice({ fecharModal }: FormApoliceProps) {
           </button>
         </div>
 
-        <form className="space-y-4">
+        <form onSubmit={cadastrarApolice} className="space-y-4">
           <div>
             <label className="mb-2 block font-semibold">
               CPF do cliente
@@ -27,7 +97,11 @@ function FormApolice({ fecharModal }: FormApoliceProps) {
 
             <input
               type="text"
+              name="cpf"
+              value={formData.cpf}
+              onChange={atualizarCampo}
               placeholder="Digite o CPF do cliente"
+              required
               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none"
             />
           </div>
@@ -37,7 +111,12 @@ function FormApolice({ fecharModal }: FormApoliceProps) {
               Cobertura
             </label>
 
-            <select className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none">
+            <select
+              name="cobertura"
+              value={formData.cobertura}
+              onChange={atualizarCampo}
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none"
+            >
               <option>Vida Individual</option>
               <option>Vida em Grupo</option>
               <option>Acidentes Pessoais</option>
@@ -53,6 +132,12 @@ function FormApolice({ fecharModal }: FormApoliceProps) {
 
               <input
                 type="number"
+                name="valor_segurado"
+                value={formData.valor_segurado}
+                onChange={atualizarCampo}
+                min="0"
+                step="0.01"
+                required
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none"
               />
             </div>
@@ -64,6 +149,12 @@ function FormApolice({ fecharModal }: FormApoliceProps) {
 
               <input
                 type="number"
+                name="mensalidade"
+                value={formData.mensalidade}
+                onChange={atualizarCampo}
+                min="0"
+                step="0.01"
+                required
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none"
               />
             </div>
@@ -75,7 +166,12 @@ function FormApolice({ fecharModal }: FormApoliceProps) {
                 Status
               </label>
 
-              <select className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none">
+              <select
+                name="status"
+                value={formData.status}
+                onChange={atualizarCampo}
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none"
+              >
                 <option>Ativa</option>
                 <option>Pendente</option>
                 <option>Cancelada</option>
@@ -89,6 +185,10 @@ function FormApolice({ fecharModal }: FormApoliceProps) {
 
               <input
                 type="date"
+                name="data_inicio"
+                value={formData.data_inicio}
+                onChange={atualizarCampo}
+                required
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none"
               />
             </div>

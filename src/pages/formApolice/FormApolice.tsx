@@ -1,7 +1,7 @@
 import axios from "axios"
 import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
-import { api, atualizar, cadastrar, deletar } from "../../services/Service"
+import { toast } from "react-toastify"
+import { api, cadastrar } from "../../services/Service"
 import type Apolice from "../../models/Apolice"
 import type Beneficiario from "../../models/Beneficiarios"
 import type Cliente from "../../models/Cliente"
@@ -204,19 +204,13 @@ function FormApolice({
         beneficiario: beneficiariosSalvos,
       } as Apolice
 
-      alert(
-        apoliceEditando
-          ? "Apólice atualizada com sucesso!"
-          : "Apólice cadastrada com sucesso!"
-      )
+      toast.success("Apólice cadastrada com sucesso!")
       await atualizarListagem()
       if (!apoliceEditando) adicionarApolice(apoliceCompleta)
       fecharModal()
     } catch (error) {
       console.error(error)
-      alert(`Erro ao salvar apólice.\n${obterMensagemErro(error)}`)
-    } finally {
-      setSalvando(false)
+      toast.error("Erro ao cadastrar apólice. Verifique os dados e tente novamente.")
     }
   }
 

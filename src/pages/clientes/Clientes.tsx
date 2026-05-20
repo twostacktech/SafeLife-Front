@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash, PencilSimple, MagnifyingGlass } from "@phosphor-icons/react";
+import { Plus, Trash, PencilSimple } from "@phosphor-icons/react";
+import { toast } from "react-toastify";
 import FormClientes from "../formclientes/FormClientes";
 import { buscar, deletar } from "../../services/Service";
 
@@ -65,9 +66,10 @@ function Clientes() {
         if (window.confirm("Deseja realmente excluir este cliente?")) {
             try {
                 await deletar(`/clientes/${cpf}`);
+                toast.success("Cliente excluído com sucesso!");
                 listarClientes();
             } catch (error) {
-                alert("Erro ao excluir o cliente.");
+                toast.error("Erro ao excluir o cliente.");
             }
         }
     }

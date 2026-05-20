@@ -304,6 +304,7 @@ a {
   border: 5px solid rgba(255, 255, 255, 0.15);
   border-radius: 32px;
   box-shadow: 0 28px 80px rgba(214, 0, 25, 0.22);
+  animation: floatImage 5s ease-in-out infinite;
 }
 
 .hero-img {
@@ -312,6 +313,18 @@ a {
   aspect-ratio: 16 / 9;
   object-fit: cover;
 }
+
+@keyframes floatImage {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-14px) rotate(0.6deg);
+  }
+}
+
 
 .about {
   display: grid;
@@ -781,5 +794,11 @@ a {
   .faq-question,
   .faq-answer {
     padding-inline: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image-box {
+    animation: none;
   }
 }

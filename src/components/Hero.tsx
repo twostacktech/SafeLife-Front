@@ -1,6 +1,39 @@
-import heroFamily from "../assets/hero-family.jpg"
+import { useEffect, useState } from "react"
+import heroFamily from "../assets/hero-family.png"
+import heroFamily2 from "../assets/hero-family2.png"
+import heroFamily3 from "../assets/hero-family3.png"
+import heroFamily4 from "../assets/hero-family4.png"
+
+const heroImages = [
+  {
+    src: heroFamily,
+    alt: "Família feliz na cozinha",
+  },
+  {
+    src: heroFamily2,
+    alt: "Família protegida pelo seguro de vida",
+  },
+  {
+    src: heroFamily3,
+    alt: "Família aproveitando momentos juntos",
+  },
+  {
+    src: heroFamily4,
+    alt: "Família reunida com segurança e tranquilidade",
+  },
+]
 
 export default function Hero() {
+  const [activeImage, setActiveImage] = useState(0)
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setActiveImage((currentImage) => (currentImage + 1) % heroImages.length)
+    }, 8000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
   return (
     <section id="home" className="hero">
       <div className="container hero-content">
@@ -24,8 +57,8 @@ export default function Hero() {
 
         <div className="hero-image-box">
           <img
-            src={heroFamily}
-            alt="Família feliz na cozinha"
+            src={heroImages[activeImage].src}
+            alt={heroImages[activeImage].alt}
             className="hero-img"
           />
         </div>

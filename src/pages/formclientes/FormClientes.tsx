@@ -59,15 +59,39 @@ function FormClientes({
         });
     };
 
+    function maiorDe18Anos(data: string) {
+        const hoje = new Date();
+        const nascimento = new Date(data);
+
+        let idade = hoje.getFullYear() - nascimento.getFullYear();
+
+        const mes = hoje.getMonth() - nascimento.getMonth();
+
+        if (
+            mes < 0 ||
+            (mes === 0 && hoje.getDate() < nascimento.getDate())
+        ) {
+            idade--;
+        }
+
+        return idade >= 18;
+    }
+
     async function salvarCliente(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+
+        // VALIDAÇÃO DE IDADE
+        if (!maiorDe18Anos(formData.data_nascimento)) {
+            alert("O cliente deve ter no mínimo 18 anos para contratar o seguro.");
+            return;
+        }
 
         try {
             if (clienteEditando) {
                 await atualizar(
                     `/clientes/${clienteEditando.cpf}`,
                     formData,
-                    () => {}
+                    () => { }
                 );
 
                 toast.success("Cliente atualizado com sucesso!");
@@ -76,7 +100,7 @@ function FormClientes({
                 await cadastrar(
                     "/clientes/cadastrar",
                     formData,
-                    () => {}
+                    () => { }
                 );
 
                 toast.success("Cliente cadastrado com sucesso!");

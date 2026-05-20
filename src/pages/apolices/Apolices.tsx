@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react"
-import { buscar } from "../../services/Service"
+import { Pencil, Trash2 } from "lucide-react"
+import { buscar, deletar } from "../../services/Service"
 import type Apolice from "../../models/Apolice"
 import FormApolice from "../formApolice/FormApolice"
 
 function Apolices() {
   const [apolices, setApolices] = useState<Apolice[]>([])
   const [modalAberto, setModalAberto] = useState(false)
+  const [apoliceEditando, setApoliceEditando] = useState<Apolice | null>(null)
   const [busca, setBusca] = useState("")
   const [coberturaSelecionada, setCoberturaSelecionada] = useState("Todos")
   const [statusSelecionado, setStatusSelecionado] = useState("Todos")
@@ -37,12 +39,42 @@ function Apolices() {
     return dataFormatada.toLocaleDateString("pt-BR")
   }
 
+  const formatarPercentual = (percentual?: number | string) => {
+    const percentualNumerico = Number(percentual)
+
+    if (Number.isNaN(percentualNumerico)) return "-"
+
+    return `${percentualNumerico.toLocaleString("pt-BR", {
+      maximumFractionDigits: 2,
+    })}%`
+  }
+
+  const formatarBeneficiarios = (apolice: Apolice) => {
+    if (!apolice.beneficiario?.length) return "-"
+
+    return apolice.beneficiario.map((beneficiario) => (
+      <div key={beneficiario.id_beneficiario ?? beneficiario.cpf}>
+        <strong>{beneficiario.nome}</strong>
+        <span className="block text-sm text-slate-500">
+          {beneficiario.cpf} · {beneficiario.parentesco} ·{" "}
+          {formatarPercentual(beneficiario.percentual)}
+        </span>
+      </div>
+    ))
+  }
+
   const apolicesFiltradas = apolices.filter((apolice) => {
     const termoBusca = busca.trim().toLowerCase()
+    const dadosBeneficiarios = apolice.beneficiario
+      ?.map((beneficiario) =>
+        [
+          beneficiario.cpf,
+        ].join(" ")
+      )
+      .join(" ")
     const dadosBusca = [
-      apolice.id_apolice.toString(),
-      apolice.cliente?.nome,
       apolice.cliente?.cpf,
+      dadosBeneficiarios,
     ]
       .filter(Boolean)
       .join(" ")
@@ -66,6 +98,35 @@ function Apolices() {
     }
   }
 
+  async function excluirApolice(id_apolice: number) {
+    if (!window.confirm("Deseja realmente excluir esta apólice?")) return
+
+    try {
+      await deletar(`/apolices/${id_apolice}`)
+      setApolices((apolicesAtuais) =>
+        apolicesAtuais.filter((apolice) => apolice.id_apolice !== id_apolice)
+      )
+    } catch (error) {
+      console.error(error)
+      alert("Erro ao excluir apólice.")
+    }
+  }
+
+  function abrirCadastro() {
+    setApoliceEditando(null)
+    setModalAberto(true)
+  }
+
+  function abrirEdicao(apolice: Apolice) {
+    setApoliceEditando(apolice)
+    setModalAberto(true)
+  }
+
+  function fecharModal() {
+    setModalAberto(false)
+    setTimeout(() => setApoliceEditando(null), 150)
+  }
+
   useEffect(() => {
     buscarApolices()
   }, [])
@@ -84,7 +145,7 @@ function Apolices() {
         </div>
 
         <button
-          onClick={() => setModalAberto(true)}
+          onClick={abrirCadastro}
           className="rounded-xl bg-red-600 px-5 py-3 font-semibold text-white"
         >
           + Nova apólice
@@ -94,7 +155,7 @@ function Apolices() {
       <section className="mb-7 grid grid-cols-1 gap-4 md:grid-cols-3">
         <input
           type="text"
-          placeholder="Buscar nº ou cliente..."
+          placeholder="Buscar por CPF do cliente ou CPF do beneficiário..."
           value={busca}
           onChange={(evento) => setBusca(evento.target.value)}
           className="rounded-xl border border-slate-200 bg-white px-5 py-4 outline-none"
@@ -124,18 +185,20 @@ function Apolices() {
         </select>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full">
+      <section className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full min-w-[1280px]">
           <thead className="bg-slate-100">
             <tr className="text-left text-sm uppercase text-slate-600">
               <th className="px-5 py-4">ID</th>
               <th className="px-5 py-4">Cliente</th>
               <th className="px-5 py-4">CPF</th>
+              <th className="px-5 py-4">Beneficiários</th>
               <th className="px-5 py-4">Cobertura</th>
               <th className="px-5 py-4">Valor Segurado</th>
               <th className="px-5 py-4">Mensalidade</th>
               <th className="px-5 py-4">Início</th>
               <th className="px-5 py-4">Status</th>
+              <th className="px-5 py-4">Ações</th>
             </tr>
           </thead>
 
@@ -143,7 +206,7 @@ function Apolices() {
             {apolicesFiltradas.length === 0 ? (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={10}
                   className="py-16 text-center text-slate-500"
                 >
                   Nenhuma apólice encontrada.
@@ -153,7 +216,7 @@ function Apolices() {
               apolicesFiltradas.map((apolice) => (
                 <tr
                   key={apolice.id_apolice}
-                  className="border-t border-slate-200"
+                  className="border-t border-slate-200 align-top"
                 >
                   <td className="px-5 py-4 font-semibold">
                     {apolice.id_apolice}
@@ -165,6 +228,10 @@ function Apolices() {
 
                   <td className="px-5 py-4">
                     {apolice.cliente?.cpf ?? "-"}
+                  </td>
+
+                  <td className="space-y-3 px-5 py-4">
+                    {formatarBeneficiarios(apolice)}
                   </td>
 
                   <td className="px-5 py-4">
@@ -186,6 +253,28 @@ function Apolices() {
                   <td className="px-5 py-4">
                     {apolice.status || "-"}
                   </td>
+
+                  <td className="px-5 py-4">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => abrirEdicao(apolice)}
+                        className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
+                        aria-label="Editar apólice"
+                      >
+                        <Pencil size={18} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => excluirApolice(apolice.id_apolice)}
+                        className="rounded-lg p-2 text-red-600 hover:bg-red-50"
+                        aria-label="Excluir apólice"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -195,8 +284,9 @@ function Apolices() {
 
       {modalAberto && (
         <FormApolice
-          fecharModal={() => setModalAberto(false)}
+          fecharModal={fecharModal}
           atualizarListagem={buscarApolices}
+          apoliceEditando={apoliceEditando}
           adicionarApolice={(apolice) =>
             setApolices((apolicesAtuais) => {
               const apoliceJaExiste = apolicesAtuais.some(

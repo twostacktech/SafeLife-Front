@@ -10,17 +10,25 @@ function Apolices() {
   const [coberturaSelecionada, setCoberturaSelecionada] = useState("Todos")
   const [statusSelecionado, setStatusSelecionado] = useState("Todos")
 
-  const formatarMoeda = (valor?: number) => {
-    if (typeof valor !== "number") return "-"
+  const formatarMoeda = (valor?: number | string) => {
+    const valorNumerico = Number(valor)
 
-    return valor.toLocaleString("pt-BR", {
+    if (Number.isNaN(valorNumerico)) return "-"
+
+    return valorNumerico.toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
     })
   }
 
-  const formatarData = (data?: Date) => {
+  const formatarData = (data?: Date | string) => {
     if (!data) return "-"
+
+    if (typeof data === "string" && data.includes("-")) {
+      const [ano, mes, dia] = data.split("T")[0].split("-")
+
+      return `${dia}/${mes}/${ano}`
+    }
 
     const dataFormatada = new Date(data)
 
@@ -188,6 +196,19 @@ function Apolices() {
       {modalAberto && (
         <FormApolice
           fecharModal={() => setModalAberto(false)}
+          atualizarListagem={buscarApolices}
+          adicionarApolice={(apolice) =>
+            setApolices((apolicesAtuais) => {
+              const apoliceJaExiste = apolicesAtuais.some(
+                (apoliceAtual) =>
+                  apoliceAtual.id_apolice === apolice.id_apolice
+              )
+
+              if (apoliceJaExiste) return apolicesAtuais
+
+              return [...apolicesAtuais, apolice]
+            })
+          }
         />
       )}
     </main>

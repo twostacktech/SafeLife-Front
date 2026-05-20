@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { toast } from "react-toastify"
 import { api, cadastrar } from "../../services/Service"
 import type Apolice from "../../models/Apolice"
 import type Cliente from "../../models/Cliente"
@@ -62,13 +63,13 @@ function FormApolice({
         cliente: respostaCliente.data,
       } as Apolice
 
-      alert("Apólice cadastrada com sucesso!")
+      toast.success("Apólice cadastrada com sucesso!")
       await atualizarListagem()
       adicionarApolice(apoliceCompleta)
       fecharModal()
     } catch (error) {
       console.error(error)
-      alert("Erro ao cadastrar apólice. Verifique os dados e tente novamente.")
+      toast.error("Erro ao cadastrar apólice. Verifique os dados e tente novamente.")
     }
   }
 

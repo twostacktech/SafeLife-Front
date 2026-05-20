@@ -10,8 +10,10 @@ import FAQ from "./components/FAQ"
 import Footer from "./components/Footer"
 
 import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { ToastContainer } from "react-toastify"
 
 import "./App.css"
+import "react-toastify/dist/ReactToastify.css"
 
 function Home() {
   return (
@@ -38,6 +40,7 @@ function App() {
       </Routes>
 
       <Footer />
+      <ToastContainer autoClose={3000} position="top-right" />
     </BrowserRouter>
   )
 }

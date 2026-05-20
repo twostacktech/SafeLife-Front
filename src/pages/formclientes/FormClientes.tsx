@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X } from "@phosphor-icons/react";
+import { toast } from "react-toastify";
 import { cadastrar, atualizar } from "../../services/Service";
 import type { Cliente } from "../clientes/Clientes";
 
@@ -69,7 +70,7 @@ function FormClientes({
                     () => {}
                 );
 
-                alert("Cliente atualizado com sucesso!");
+                toast.success("Cliente atualizado com sucesso!");
 
             } else {
                 await cadastrar(
@@ -78,7 +79,7 @@ function FormClientes({
                     () => {}
                 );
 
-                alert("Cliente cadastrado com sucesso!");
+                toast.success("Cliente cadastrado com sucesso!");
             }
 
             atualizarListagem();
@@ -86,7 +87,7 @@ function FormClientes({
 
         } catch (error) {
             console.error(error);
-            alert("Erro ao salvar cliente");
+            toast.error("Erro ao salvar cliente");
         }
     }
 

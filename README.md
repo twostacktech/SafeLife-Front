@@ -6,7 +6,7 @@ O **SafeLife Frontend** foi construído com React, TypeScript e Vite para consum
 
 ---
 
-# Sobre o projeto
+# 📌 Sobre o projeto
 
 A aplicação possui uma área pública institucional e uma área administrativa para consulta e manutenção dos dados do sistema.
 
@@ -14,16 +14,16 @@ O objetivo do projeto é facilitar a gestão de seguros de vida, permitindo cada
 
 ---
 
-# Funcionalidades
+# 🖥️ Funcionalidades
 
-## Página inicial
+##  🏠 Página inicial
 
 - Página institucional da SafeLife
 - Seções de apresentação, benefícios, chamada para ação e dúvidas frequentes
 - Navbar e footer personalizados
 - Layout responsivo
 
-## Clientes
+## 👥 Clientes
 
 - Cadastro de clientes
 - Listagem de clientes
@@ -32,7 +32,7 @@ O objetivo do projeto é facilitar a gestão de seguros de vida, permitindo cada
 - Busca por CPF
 - Integração com a API REST
 
-## Apólices
+## 📋 Apólices
 
 - Cadastro de apólices
 - Listagem de apólices
@@ -42,7 +42,7 @@ O objetivo do projeto é facilitar a gestão de seguros de vida, permitindo cada
 - Cadastro de beneficiários por apólice
 - Filtros por CPF, cobertura e status
 
-## Relatórios
+## 📊 Relatórios
 
 - Resumo de clientes cadastrados
 - Resumo de apólices cadastradas
@@ -50,7 +50,7 @@ O objetivo do projeto é facilitar a gestão de seguros de vida, permitindo cada
 
 ---
 
-# Interface
+# 🎨 Interface
 
 O projeto utiliza uma identidade visual voltada para seguros e proteção familiar, com:
 
@@ -62,7 +62,7 @@ O projeto utiliza uma identidade visual voltada para seguros e proteção famili
 
 ---
 
-# Tecnologias utilizadas
+# 🚀 Tecnologias utilizadas
 
 ## Frontend
 
@@ -85,7 +85,7 @@ O projeto utiliza uma identidade visual voltada para seguros e proteção famili
 
 ---
 
-# Instalação
+# ⚙️ Instalação
 
 Clone o repositório:
 

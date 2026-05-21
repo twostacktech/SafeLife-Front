@@ -52,10 +52,38 @@ function FormClientes({
 
     if (!isOpen) return null;
 
+    function formatarCPF(valor: string) {
+        return valor
+            .replace(/\D/g, "")
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+            .slice(0, 14);
+    }
+
+    function formatarTelefone(valor: string) {
+        return valor
+            .replace(/\D/g, "")
+            .replace(/^(\d{2})(\d)/g, "($1) $2")
+            .replace(/(\d{5})(\d)/, "$1-$2")
+            .slice(0, 15);
+    }
+
     const atualizarCampo = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+        let valor = e.target.value;
+
+        if (e.target.name === "cpf") {
+            valor = formatarCPF(valor);
+        }
+
+        if (e.target.name === "telefone") {
+            valor = formatarTelefone(valor);
+        }
+
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [e.target.name]: valor
         });
     };
 
@@ -80,7 +108,6 @@ function FormClientes({
     async function salvarCliente(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        // VALIDAÇÃO DE IDADE
         if (!maiorDe18Anos(formData.data_nascimento)) {
             toast.error("O cliente deve ter no mínimo 18 anos para contratar o seguro.");
             return;
@@ -116,98 +143,265 @@ function FormClientes({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
-            <div className="w-full max-w-xl bg-white p-6 rounded-2xl shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+
+            <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden">
 
                 {/* HEADER */}
-                <div className="flex justify-between items-center border-b pb-3 mb-4">
-                    <h2 className="font-bold text-xl text-gray-800">
-                        {clienteEditando ? "Editar cliente" : "Novo cliente"}
-                    </h2>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">
+                            {clienteEditando ? "Editar Cliente" : "Novo Cliente"}
+                        </h2>
+
+                        <p className="text-sm text-gray-500 mt-1">
+                            Preencha os dados do cliente abaixo.
+                        </p>
+                    </div>
 
                     <button
                         onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700 transition"
+                        className="p-2 rounded-full hover:bg-gray-100 transition"
                     >
-                        <X size={20} />
+                        <X
+                            size={22}
+                            className="text-gray-500"
+                        />
                     </button>
+
                 </div>
 
                 {/* FORM */}
-                <form onSubmit={salvarCliente} className="space-y-4">
+                <form
+                    onSubmit={salvarCliente}
+                    className="p-6"
+                >
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                        <input
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            name="nome"
-                            value={formData.nome}
-                            onChange={atualizarCampo}
-                            placeholder="Nome"
-                        />
+                        {/* NOME */}
+                        <div className="flex flex-col">
+                            <label className="text-sm font-semibold text-gray-700 mb-2">
+                                Nome
+                            </label>
 
-                        <input
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            name="email"
-                            value={formData.email}
-                            onChange={atualizarCampo}
-                            placeholder="Email"
-                        />
+                            <input
+                                className="
+                                    w-full
+                                    px-4
+                                    py-3
+                                    border
+                                    border-gray-300
+                                    rounded-xl
+                                    outline-none
+                                    transition
+                                    focus:ring-2
+                                    focus:ring-red-500
+                                    focus:border-red-500
+                                "
+                                name="nome"
+                                value={formData.nome}
+                                onChange={atualizarCampo}
+                                placeholder="Enzo Lorenzo"
+                                maxLength={100}
+                                required
+                            />
+                        </div>
 
-                        <input
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            name="cpf"
-                            value={formData.cpf}
-                            onChange={atualizarCampo}
-                            placeholder="CPF"
-                        />
+                        {/* EMAIL */}
+                        <div className="flex flex-col">
+                            <label className="text-sm font-semibold text-gray-700 mb-2">
+                                Email
+                            </label>
 
-                        <input
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            type="date"
-                            name="data_nascimento"
-                            value={formData.data_nascimento}
-                            onChange={atualizarCampo}
-                        />
+                            <input
+                                className="
+                                    w-full
+                                    px-4
+                                    py-3
+                                    border
+                                    border-gray-300
+                                    rounded-xl
+                                    outline-none
+                                    transition
+                                    focus:ring-2
+                                    focus:ring-red-500
+                                    focus:border-red-500
+                                "
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={atualizarCampo}
+                                placeholder="seuemail@mail.com"
+                                maxLength={120}
+                                required
+                            />
+                        </div>
 
-                        <input
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            name="telefone"
-                            value={formData.telefone}
-                            onChange={atualizarCampo}
-                            placeholder="Telefone"
-                        />
+                        {/* CPF */}
+                        <div className="flex flex-col">
+                            <label className="text-sm font-semibold text-gray-700 mb-2">
+                                CPF
+                            </label>
 
-                        <input
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                            name="senha"
-                            type="password"
-                            value={formData.senha}
-                            onChange={atualizarCampo}
-                            placeholder="Senha"
-                        />
+                            <input
+                                className="
+                                    w-full
+                                    px-4
+                                    py-3
+                                    border
+                                    border-gray-300
+                                    rounded-xl
+                                    outline-none
+                                    transition
+                                    focus:ring-2
+                                    focus:ring-red-500
+                                    focus:border-red-500
+                                "
+                                name="cpf"
+                                value={formData.cpf}
+                                onChange={atualizarCampo}
+                                placeholder="123.456.789-01"
+                                maxLength={14}
+                                inputMode="numeric"
+                                required
+                            />
+                        </div>
+
+                        {/* DATA NASCIMENTO */}
+                        <div className="flex flex-col">
+                            <label className="text-sm font-semibold text-gray-700 mb-2">
+                                Data de Nascimento
+                            </label>
+
+                            <input
+                                className="
+                                    w-full
+                                    px-4
+                                    py-3
+                                    border
+                                    border-gray-300
+                                    rounded-xl
+                                    outline-none
+                                    transition
+                                    focus:ring-2
+                                    focus:ring-red-500
+                                    focus:border-red-500
+                                "
+                                type="date"
+                                name="data_nascimento"
+                                value={formData.data_nascimento}
+                                onChange={atualizarCampo}
+                                required
+                            />
+                        </div>
+
+                        {/* TELEFONE */}
+                        <div className="flex flex-col">
+                            <label className="text-sm font-semibold text-gray-700 mb-2">
+                                Telefone
+                            </label>
+
+                            <input
+                                className="
+                                    w-full
+                                    px-4
+                                    py-3
+                                    border
+                                    border-gray-300
+                                    rounded-xl
+                                    outline-none
+                                    transition
+                                    focus:ring-2
+                                    focus:ring-red-500
+                                    focus:border-red-500
+                                "
+                                name="telefone"
+                                value={formData.telefone}
+                                onChange={atualizarCampo}
+                                placeholder="(11) 99999-9999"
+                                maxLength={15}
+                                inputMode="numeric"
+                                required
+                            />
+                        </div>
+
+                        {/* SENHA */}
+                        <div className="flex flex-col">
+                            <label className="text-sm font-semibold text-gray-700 mb-2">
+                                Senha
+                            </label>
+
+                            <input
+                                className="
+                                    w-full
+                                    px-4
+                                    py-3
+                                    border
+                                    border-gray-300
+                                    rounded-xl
+                                    outline-none
+                                    transition
+                                    focus:ring-2
+                                    focus:ring-red-500
+                                    focus:border-red-500
+                                "
+                                type="password"
+                                name="senha"
+                                value={formData.senha}
+                                onChange={atualizarCampo}
+                                placeholder="Digite uma senha"
+                                minLength={6}
+                                maxLength={30}
+                            />
+                        </div>
+
                     </div>
 
                     {/* BOTÕES */}
-                    <div className="flex justify-end gap-3 pt-4">
+                    <div className="flex justify-end gap-3 mt-8 pt-5 border-t border-gray-200">
+
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-400 rounded-lg transition"
+                            className="
+                                px-5
+                                py-2.5
+                                rounded-xl
+                                bg-gray-200
+                                text-gray-700
+                                font-medium
+                                hover:bg-gray-300
+                                transition
+                            "
                         >
                             Cancelar
                         </button>
 
                         <button
                             type="submit"
-                            className="px-5 py-2 text-sm font-medium text-white bg-red-700 hover:bg-red-800 rounded-lg transition shadow-sm"
+                            className="
+                                px-6
+                                py-2.5
+                                rounded-xl
+                                bg-red-700
+                                text-white
+                                font-medium
+                                hover:bg-red-800
+                                transition
+                                shadow-md
+                            "
                         >
-                            Salvar
+                            {clienteEditando ? "Salvar Alterações" : "Cadastrar Cliente"}
                         </button>
+
                     </div>
 
                 </form>
+
             </div>
+
         </div>
     );
 }

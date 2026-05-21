@@ -17,9 +17,14 @@ function Clientes() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
-
     const [cpfBusca, setCpfBusca] = useState("");
-    const [erroBusca, setErroBusca] = useState("");
+
+    const cpfBuscaNumeros = cpfBusca.replace(/\D/g, "");
+    const clientesFiltrados = clientes.filter((cliente) => {
+        if (!cpfBuscaNumeros) return true;
+
+        return cliente.cpf?.replace(/\D/g, "").includes(cpfBuscaNumeros);
+    });
 
     async function listarClientes() {
         try {
@@ -29,37 +34,12 @@ function Clientes() {
         }
     }
 
-    async function lidarComBusca(e: React.FormEvent) {
+    function lidarComBusca(e: React.FormEvent) {
         e.preventDefault();
-
-        if (!cpfBusca.trim()) {
-            listarClientes();
-            return;
-        }
-
-        try {
-            setErroBusca("");
-            // Faz a chamada na rota do back-end (ex: /clientes/12345678900)
-            await buscar(`/clientes/${cpfBusca.trim()}`, (data: Cliente) => {
-                if (data && data.cpf) {
-                    setClientes([data]); // Envelopa em array pro .map da lista não quebrar
-                } else {
-                    setClientes([]);
-                    setErroBusca("Nenhum cliente encontrado com este CPF.");
-                }
-            });
-        } catch (error) {
-            console.error("Erro ao buscar cliente por CPF:", error);
-            setClientes([]);
-            setErroBusca("Cliente não encontrado ou erro na busca.");
-        }
     }
 
-    // Função para resetar a busca e mostrar todos os clientes de novo
     function limparBusca() {
         setCpfBusca("");
-        setErroBusca("");
-        listarClientes();
     }
 
     async function excluirCliente(cpf: string) {
@@ -144,18 +124,15 @@ function Clientes() {
                                 onClick={limparBusca}
                                 className="px-3 py-2 text-sm font-medium bg-gray-400 text-gray-800  hover:text-blue-900 hover:bg-gray-300 rounded-xl transition"
                             >
-                                Voltar 
+                                Voltar
                             </button>
                         )}
                     </div>
-                    {erroBusca && (
-                        <p className="text-xs text-red-600 mt-2 font-medium">{erroBusca}</p>
-                    )}
                 </form>
 
                 {/* LISTA */}
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    {clientes.map((c) => (
+                    {clientesFiltrados.map((c) => (
                         <article
                             key={c.cpf}
                             className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition"
@@ -187,6 +164,12 @@ function Clientes() {
                         </article>
                     ))}
                 </div>
+
+                {clientesFiltrados.length === 0 && (
+                    <p className="mt-6 text-sm font-medium text-red-600">
+                        Nenhum cliente encontrado com este CPF.
+                    </p>
+                )}
             </div>
 
             {/* MODAL */}

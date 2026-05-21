@@ -1,33 +1,33 @@
-import axios from "axios"
-import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
-import { toast } from "react-toastify"
-import { api, atualizar, cadastrar, deletar } from "../../services/Service"
-import type Apolice from "../../models/Apolice"
-import type Beneficiario from "../../models/Beneficiarios"
-import type Cliente from "../../models/Cliente"
+import axios from "axios";
+import { useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { toast } from "react-toastify";
+import { api, atualizar, cadastrar, deletar } from "../../services/Service";
+import type Apolice from "../../models/Apolice";
+import type Beneficiario from "../../models/Beneficiarios";
+import type Cliente from "../../models/Cliente";
 
 type FormApoliceProps = {
-  fecharModal: () => void
-  atualizarListagem: () => Promise<void> | void
-  adicionarApolice: (apolice: Apolice) => void
-  apoliceEditando?: Apolice | null
-}
+  fecharModal: () => void;
+  atualizarListagem: () => Promise<void> | void;
+  adicionarApolice: (apolice: Apolice) => void;
+  apoliceEditando?: Apolice | null;
+};
 
 type BeneficiarioForm = {
-  id_beneficiario?: number
-  nome: string
-  cpf: string
-  parentesco: string
-  percentual: string
-}
+  id_beneficiario?: number;
+  nome: string;
+  cpf: string;
+  parentesco: string;
+  percentual: string;
+};
 
 const criarBeneficiarioVazio = (): BeneficiarioForm => ({
   nome: "",
   cpf: "",
   parentesco: "",
   percentual: "",
-})
+});
 
 function FormApolice({
   fecharModal,
@@ -35,8 +35,10 @@ function FormApolice({
   adicionarApolice,
   apoliceEditando,
 }: FormApoliceProps) {
-  const [salvando, setSalvando] = useState(false)
-  const [beneficiariosRemovidos, setBeneficiariosRemovidos] = useState<number[]>([])
+  const [salvando, setSalvando] = useState(false);
+  const [beneficiariosRemovidos, setBeneficiariosRemovidos] = useState<
+    number[]
+  >([]);
   const [formData, setFormData] = useState({
     cpf: apoliceEditando?.cliente?.cpf ?? "",
     cobertura: apoliceEditando?.cobertura ?? "Vida Individual",
@@ -47,7 +49,7 @@ function FormApolice({
       typeof apoliceEditando?.data_inicio === "string"
         ? apoliceEditando.data_inicio.split("T")[0]
         : "",
-  })
+  });
   const [beneficiarios, setBeneficiarios] = useState<BeneficiarioForm[]>(
     apoliceEditando?.beneficiario?.length
       ? apoliceEditando.beneficiario.map((beneficiario) => ({
@@ -57,81 +59,101 @@ function FormApolice({
           parentesco: beneficiario.parentesco,
           percentual: beneficiario.percentual.toString(),
         }))
-      : [criarBeneficiarioVazio()]
-  )
+      : [criarBeneficiarioVazio()],
+  );
+  function formatarCPF(valor: string) {
+    return valor
+      .replace(/\D/g, "")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+      .slice(0, 14);
+  }
 
   const atualizarCampo = (
-    evento: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    evento: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
+    let valor = evento.target.value;
+
+    if (evento.target.name === "cpf") {
+      valor = formatarCPF(valor);
+    }
+
     setFormData({
       ...formData,
-      [evento.target.name]: evento.target.value,
-    })
-  }
+      [evento.target.name]: valor,
+    });
+  };
 
   const atualizarBeneficiario = (
     index: number,
     campo: keyof BeneficiarioForm,
-    valor: string
+    valor: string,
   ) => {
+    let valorFormatado = valor;
+
+    if (campo === "cpf") {
+      valorFormatado = formatarCPF(valor);
+    }
+
     setBeneficiarios((beneficiariosAtuais) =>
       beneficiariosAtuais.map((beneficiario, beneficiarioIndex) =>
         beneficiarioIndex === index
-          ? { ...beneficiario, [campo]: valor }
-          : beneficiario
-      )
-    )
-  }
+          ? { ...beneficiario, [campo]: valorFormatado }
+          : beneficiario,
+      ),
+    );
+  };
 
   const adicionarBeneficiario = () => {
     setBeneficiarios((beneficiariosAtuais) => [
       ...beneficiariosAtuais,
       criarBeneficiarioVazio(),
-    ])
-  }
+    ]);
+  };
 
   const removerBeneficiario = (index: number) => {
     setBeneficiarios((beneficiariosAtuais) => {
-      const beneficiarioRemovido = beneficiariosAtuais[index]
+      const beneficiarioRemovido = beneficiariosAtuais[index];
 
       if (beneficiarioRemovido?.id_beneficiario) {
         setBeneficiariosRemovidos((idsAtuais) => [
           ...idsAtuais,
           beneficiarioRemovido.id_beneficiario as number,
-        ])
+        ]);
       }
 
       return beneficiariosAtuais.filter(
-        (_, beneficiarioIndex) => beneficiarioIndex !== index
-      )
-    })
-  }
+        (_, beneficiarioIndex) => beneficiarioIndex !== index,
+      );
+    });
+  };
 
   const obterMensagemErro = (error: unknown) => {
     if (axios.isAxiosError(error)) {
-      const mensagem = error.response?.data?.message
+      const mensagem = error.response?.data?.message;
 
-      if (Array.isArray(mensagem)) return mensagem.join("\n")
-      if (typeof mensagem === "string") return mensagem
-      if (typeof error.response?.data === "string") return error.response.data
+      if (Array.isArray(mensagem)) return mensagem.join("\n");
+      if (typeof mensagem === "string") return mensagem;
+      if (typeof error.response?.data === "string") return error.response.data;
     }
 
-    return "Verifique os dados e tente novamente."
-  }
+    return "Verifique os dados e tente novamente.";
+  };
 
   async function salvarApolice(evento: React.FormEvent<HTMLFormElement>) {
-    evento.preventDefault()
+    evento.preventDefault();
 
-    if (salvando) return
+    if (salvando) return;
 
     const percentualTotal = beneficiarios.reduce(
       (total, beneficiario) => total + Number(beneficiario.percentual),
-      0
-    )
+      0,
+    );
 
     if (Math.abs(percentualTotal - 100) > 0.01) {
-      toast.error("A soma dos percentuais dos beneficiários precisa ser 100%.")
-      return
+      toast.error("A soma dos percentuais dos beneficiários precisa ser 100%.");
+      return;
     }
 
     const dadosParaEnviar = {
@@ -141,11 +163,11 @@ function FormApolice({
       status: formData.status,
       cobertura: formData.cobertura,
       cliente: {
-        cpf: formData.cpf,
+        cpf: formData.cpf.replace(/\D/g, ""),
       },
-    }
+    };
 
-    setSalvando(true)
+    setSalvando(true);
 
     try {
       const apoliceSalva = apoliceEditando
@@ -156,45 +178,47 @@ function FormApolice({
               ...dadosParaEnviar,
               beneficiario: apoliceEditando.beneficiario ?? [],
             },
-            () => {}
+            () => {},
           )
-        : await cadastrar("/apolices", dadosParaEnviar, () => {})
-      const beneficiariosSalvos: Beneficiario[] = []
+        : await cadastrar("/apolices", dadosParaEnviar, () => {});
+      const beneficiariosSalvos: Beneficiario[] = [];
 
       try {
         for (const idBeneficiario of beneficiariosRemovidos) {
-          await deletar(`/beneficiarios/${idBeneficiario}`)
+          await deletar(`/beneficiarios/${idBeneficiario}`);
         }
 
         for (const beneficiario of beneficiarios) {
           const dadosBeneficiario = {
             id_beneficiario: beneficiario.id_beneficiario,
             nome: beneficiario.nome,
-            cpf: beneficiario.cpf,
+            cpf: beneficiario.cpf.replace(/\D/g, ""),
             parentesco: beneficiario.parentesco,
             percentual: Number(beneficiario.percentual),
             apolice: {
               id_apolice: apoliceSalva.id_apolice,
             },
-          }
+          };
           const beneficiarioSalvo = beneficiario.id_beneficiario
             ? await atualizar("/beneficiarios", dadosBeneficiario, () => {})
-            : await cadastrar("/beneficiarios", dadosBeneficiario, () => {})
+            : await cadastrar("/beneficiarios", dadosBeneficiario, () => {});
 
-          beneficiariosSalvos.push(beneficiarioSalvo)
+          beneficiariosSalvos.push(beneficiarioSalvo);
         }
       } catch (error) {
-        await atualizarListagem()
+        await atualizarListagem();
         toast.error(
           `A apólice foi salva, mas houve erro ao salvar beneficiários.\n${obterMensagemErro(
-            error
-          )}`
-        )
-        fecharModal()
-        return
+            error,
+          )}`,
+        );
+        fecharModal();
+        return;
       }
 
-      const respostaCliente = await api.get<Cliente>(`/clientes/${formData.cpf}`)
+      const respostaCliente = await api.get<Cliente>(
+        `/clientes/${formData.cpf}`,
+      );
       const apoliceCompleta = {
         ...dadosParaEnviar,
         ...apoliceSalva,
@@ -203,15 +227,17 @@ function FormApolice({
         data_inicio: formData.data_inicio,
         cliente: respostaCliente.data,
         beneficiario: beneficiariosSalvos,
-      } as Apolice
+      } as Apolice;
 
-      toast.success("Apólice cadastrada com sucesso!")
-      await atualizarListagem()
-      if (!apoliceEditando) adicionarApolice(apoliceCompleta)
-      fecharModal()
+      toast.success("Apólice cadastrada com sucesso!");
+      await atualizarListagem();
+      if (!apoliceEditando) adicionarApolice(apoliceCompleta);
+      fecharModal();
     } catch (error) {
-      console.error(error)
-      toast.error("Erro ao cadastrar apólice. Verifique os dados e tente novamente.")
+      console.error(error);
+      toast.error(
+        "Erro ao cadastrar apólice. Verifique os dados e tente novamente.",
+      );
     }
   }
 
@@ -235,9 +261,7 @@ function FormApolice({
 
         <form onSubmit={salvarApolice} className="space-y-4">
           <div>
-            <label className="mb-2 block font-semibold">
-              CPF do cliente
-            </label>
+            <label className="mb-2 block font-semibold">CPF do cliente</label>
 
             <input
               type="text"
@@ -245,6 +269,8 @@ function FormApolice({
               value={formData.cpf}
               onChange={atualizarCampo}
               placeholder="Digite o CPF do cliente"
+              maxLength={14}
+              inputMode="numeric"
               required
               disabled={salvando}
               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none disabled:bg-slate-100"
@@ -252,9 +278,7 @@ function FormApolice({
           </div>
 
           <div>
-            <label className="mb-2 block font-semibold">
-              Cobertura
-            </label>
+            <label className="mb-2 block font-semibold">Cobertura</label>
 
             <select
               name="cobertura"
@@ -290,9 +314,7 @@ function FormApolice({
             </div>
 
             <div>
-              <label className="mb-2 block font-semibold">
-                Mensalidade
-              </label>
+              <label className="mb-2 block font-semibold">Mensalidade</label>
 
               <input
                 type="number"
@@ -310,9 +332,7 @@ function FormApolice({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-2 block font-semibold">
-                Status
-              </label>
+              <label className="mb-2 block font-semibold">Status</label>
 
               <select
                 name="status"
@@ -328,9 +348,7 @@ function FormApolice({
             </div>
 
             <div>
-              <label className="mb-2 block font-semibold">
-                Data de início
-              </label>
+              <label className="mb-2 block font-semibold">Data de início</label>
 
               <input
                 type="date"
@@ -385,6 +403,8 @@ function FormApolice({
                       atualizarBeneficiario(index, "cpf", evento.target.value)
                     }
                     placeholder="CPF do beneficiário"
+                    maxLength={14}
+                    inputMode="numeric"
                     required
                     disabled={salvando}
                     className="rounded-xl border border-slate-200 px-4 py-3 outline-none disabled:bg-slate-100"
@@ -397,7 +417,7 @@ function FormApolice({
                       atualizarBeneficiario(
                         index,
                         "parentesco",
-                        evento.target.value
+                        evento.target.value,
                       )
                     }
                     placeholder="Parentesco"
@@ -414,7 +434,7 @@ function FormApolice({
                         atualizarBeneficiario(
                           index,
                           "percentual",
-                          evento.target.value
+                          evento.target.value,
                         )
                       }
                       min="0"
@@ -464,7 +484,7 @@ function FormApolice({
         </form>
       </div>
     </div>
-  )
+  );
 }
 
-export default FormApolice
+export default FormApolice;

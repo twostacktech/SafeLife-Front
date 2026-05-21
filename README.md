@@ -1,4 +1,4 @@
-# SafeLife Frontend
+# 🛡️ SafeLife Frontend
 
 Interface web desenvolvida para o sistema SafeLife, uma aplicação de gestão de clientes, apólices de seguro e relatórios administrativos.
 

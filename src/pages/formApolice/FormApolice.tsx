@@ -28,6 +28,8 @@ const criarBeneficiarioVazio = (): BeneficiarioForm => ({
   percentual: "",
 })
 
+const limparCpf = (cpf: string) => cpf.replace(/\D/g, "")
+
 function FormApolice({
   fecharModal,
   atualizarListagem,
@@ -133,6 +135,8 @@ function FormApolice({
       return
     }
 
+    const cpfCliente = limparCpf(formData.cpf)
+
     const dadosParaEnviar = {
       data_inicio: formData.data_inicio,
       mensalidade: Number(formData.mensalidade),
@@ -140,7 +144,7 @@ function FormApolice({
       status: formData.status,
       cobertura: formData.cobertura,
       cliente: {
-        cpf: formData.cpf,
+        cpf: cpfCliente,
       },
     }
 
@@ -169,7 +173,7 @@ function FormApolice({
           const dadosBeneficiario = {
             id_beneficiario: beneficiario.id_beneficiario,
             nome: beneficiario.nome,
-            cpf: beneficiario.cpf,
+            cpf: limparCpf(beneficiario.cpf),
             parentesco: beneficiario.parentesco,
             percentual: Number(beneficiario.percentual),
             apolice: {
@@ -193,14 +197,23 @@ function FormApolice({
         return
       }
 
-      const respostaCliente = await api.get<Cliente>(`/clientes/${formData.cpf}`)
+      let clienteApolice =
+        apoliceSalva.cliente ?? apoliceEditando?.cliente ?? ({ cpf: cpfCliente } as Cliente)
+
+      try {
+        const respostaCliente = await api.get<Cliente>(`/clientes/${cpfCliente}`)
+        clienteApolice = respostaCliente.data
+      } catch (error) {
+        console.warn("Apólice salva, mas não foi possível buscar o cliente:", error)
+      }
+
       const apoliceCompleta = {
         ...dadosParaEnviar,
         ...apoliceSalva,
         valor_segurado: Number(formData.valor_segurado),
         mensalidade: Number(formData.mensalidade),
         data_inicio: formData.data_inicio,
-        cliente: respostaCliente.data,
+        cliente: clienteApolice,
         beneficiario: beneficiariosSalvos,
       } as Apolice
 
